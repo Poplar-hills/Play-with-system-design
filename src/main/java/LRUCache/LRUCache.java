@@ -26,19 +26,22 @@ public class LRUCache {
     private static int MAX_CACHE_SIZE, MAX_AGE;
     private Map<String, Entry> map;
     private Entry head, tail;
+    private Timer timer;
 
     public LRUCache(int size, int maxAge) {
         MAX_CACHE_SIZE = size;
         MAX_AGE = maxAge;
         map = new HashMap<>();
-        Thread thred = new Thread(this::periodicallyClearCache);
+        Thread thread = new Thread(this::periodicallyClearCache);
+        thread.start();
     }
 
     public String getEntry(String query) {
         if (!map.containsKey(query)) return null;
         Entry entry = map.get(query);
-        removeEntry(entry);
-        addToTop(entry);
+        entry.timestamp = Instant.now().getEpochSecond();  // update its freshness
+        removeEntryFromList(entry);
+        addToTopOfList(entry);
         return entry.result;
     }
 
@@ -46,22 +49,22 @@ public class LRUCache {
         if (map.containsKey(query)) {            // update existing entry
             Entry entry = map.get(query);
             entry.result = result;
-            removeEntry(entry);
-            addToTop(entry);
+            removeEntryFromList(entry);
+            addToTopOfList(entry);
             return;
         }
 
         Entry entry = new Entry(query, result);  // create a new entry
         map.put(query, entry);
-        addToTop(entry);
+        addToTopOfList(entry);
 
         if (map.size() > MAX_CACHE_SIZE) {       // remove the least recently used entry
             map.remove(tail.query);
-            removeEntry(tail);
+            removeEntryFromList(tail);
         }
     }
 
-    private void addToTop(Entry entry) {
+    private void addToTopOfList(Entry entry) {
         entry.prev = null;
         entry.next = head;
         if (head != null) head.prev = entry;  // remember to maintain the head, tail pointers
@@ -69,7 +72,7 @@ public class LRUCache {
         if (tail == null) tail = head;        // same here
     }
 
-    private void removeEntry(Entry entry) {
+    private void removeEntryFromList(Entry entry) {
         Entry prevEntry = entry.prev, nextEntry = entry.next;
 
         if (prevEntry != null)
@@ -84,7 +87,7 @@ public class LRUCache {
     }
 
     private void periodicallyClearCache() {
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -92,12 +95,12 @@ public class LRUCache {
                 Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();
                 while (it.hasNext()) {
                     Entry cacheEntry = it.next().getValue();
-                    boolean hasExpired = cacheEntry.timestamp - currTimestamp > 0;
+                    boolean hasExpired = currTimestamp - cacheEntry.timestamp >= MAX_AGE;
+                    removeEntryFromList(cacheEntry);
                     if (hasExpired) it.remove();
-                    removeEntry(cacheEntry);
                 }
             }
-        }, MAX_AGE);
+        }, MAX_AGE * 1000);
     }
 
     @Override
@@ -114,6 +117,10 @@ public class LRUCache {
         }
 
         return s.toString();
+    }
+
+    public void destroy() {
+        timer.cancel();
     }
 
     public static void main(String[] args) {
@@ -137,11 +144,23 @@ public class LRUCache {
         cache.getEntry("c");
         log(cache.toString());   // expects C <-> D <-> A
 
+        try {
+            log("Sleeping for 1 seconds...");
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e) { log(e); }
+
         cache.putEntry("e", "E");
         log(cache.toString());   // expects E <-> C <-> D ("A" got evicted)
 
-        try { Thread.sleep(3000); }
-        catch (InterruptedException e) { System.out.println(e); }
-        log(cache.toString());   // expects E <-> D ("C" got evicted)
+        try {
+            log("Sleeping for 1 seconds...");
+            Thread.sleep(1000);
+        }
+        catch (InterruptedException e) { log(e); }
+
+        log(cache.toString());   // expects E ("C", "D" got evicted)
+
+        cache.destroy();
     }
 }
