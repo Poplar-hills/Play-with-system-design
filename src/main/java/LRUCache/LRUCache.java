@@ -96,8 +96,10 @@ public class LRUCache {
                 while (it.hasNext()) {
                     Entry cacheEntry = it.next().getValue();
                     boolean hasExpired = currTimestamp - cacheEntry.timestamp >= MAX_AGE;
-                    removeEntryFromList(cacheEntry);
-                    if (hasExpired) it.remove();
+                    if (hasExpired) {
+                        removeEntryFromList(cacheEntry);
+                        it.remove();
+                    }
                 }
             }
         }, MAX_AGE * 1000);
