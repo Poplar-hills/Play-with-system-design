@@ -41,7 +41,7 @@ public class LRUCache {
         MAX_CACHE_SIZE = size;
         MAX_AGE = maxAge;
         map = new HashMap<>();
-        Thread thread = new Thread(this::periodicallyClearCache);
+        Thread thread = new Thread(this::periodicallyClearCache);  // spawn a new thread to periodically clear overage cache
         thread.start();
     }
 
@@ -97,7 +97,7 @@ public class LRUCache {
 
     private void periodicallyClearCache() {  // schedule a timer to periodically clear expired cache entries
         timer = new Timer();
-        timer.schedule(new TimerTask() {
+        timer.schedule(new TimerTask() {  // TimerTask is not a SAM (single abstract method) type, meaning we cannot pass a lambda here
             @Override
             public void run() {
                 long currTimestamp = Instant.now().getEpochSecond();
@@ -106,8 +106,8 @@ public class LRUCache {
                     Entry cacheEntry = it.next().getValue();
                     if (currTimestamp - cacheEntry.timestamp >= MAX_AGE) {  // check if the cache entry has expired
                         removeEntryFromList(cacheEntry);
-                        it.remove();  // Node: we cannot remove entries while looping over it using "for" or "forEach", iterator is the only possible way to do it
-                    }
+                        it.remove();  // Node: it's impossible to remove entries while looping over the map using "for" or "forEach",
+                    }                 // iterator is the only way to do it.
                 }
             }
         }, MAX_AGE * 1000);
@@ -130,7 +130,7 @@ public class LRUCache {
     }
 
     public void destroy() {
-        timer.cancel();
+        timer.cancel();  // once the timer is cancelled, the thread will finish
     }
 
     public static void main(String[] args) {
