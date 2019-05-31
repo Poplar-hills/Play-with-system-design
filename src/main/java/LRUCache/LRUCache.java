@@ -25,6 +25,10 @@ import static main.java.Utils.Helpers.log;
 *     xxx minutes and remove it if it's overage.
 *   - So our implementation will be a HashMap holding the keys and address of the nodes of a doubly linked list,
 *     and the doubly linked list holds the values to the keys (SEE _illustration.png).
+*
+* - Enhancement (SEE: p394 of Cracking the Coding Interview 6th Edition):
+*   1. Expand to many machines
+*   2. Clear the cache based on the topic or the URLs.
 * */
 
 public class LRUCache {
