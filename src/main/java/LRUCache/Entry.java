@@ -10,5 +10,10 @@ public class Entry {
     }
 
     public Entry() {}
+
+    @Override
+    public String toString() {
+        return result;
+    }
 }
 
