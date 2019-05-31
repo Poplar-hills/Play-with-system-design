@@ -1,19 +1,19 @@
 package main.java.LRUCache;
 
+import java.time.Instant;
+
 public class Entry {
     public String query, result;
     public Entry prev, next;
+    public long timestamp;
 
     public Entry(String query, String result) {
         this.query = query;
         this.result = result;
+        timestamp = Instant.now().getEpochSecond();
     }
-
-    public Entry() {}
 
     @Override
-    public String toString() {
-        return result;
-    }
+    public String toString() { return result; }
 }
 

@@ -1,7 +1,7 @@
 package main.java.LRUCache;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
+import java.util.*;
 
 import static main.java.Utils.Helpers.log;
 
@@ -23,13 +23,15 @@ import static main.java.Utils.Helpers.log;
 * */
 
 public class LRUCache {
-    private static int MAX_CACHE_SIZE;
+    private static int MAX_CACHE_SIZE, MAX_AGE;
     private Map<String, Entry> map;
     private Entry head, tail;
 
-    public LRUCache(int size) {
+    public LRUCache(int size, int maxAge) {
         MAX_CACHE_SIZE = size;
+        MAX_AGE = maxAge;
         map = new HashMap<>();
+        Thread thred = new Thread(this::periodicallyClearCache);
     }
 
     public String getEntry(String query) {
@@ -81,6 +83,23 @@ public class LRUCache {
             tail = prevEntry;  // same here
     }
 
+    private void periodicallyClearCache() {
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                long currTimestamp = Instant.now().getEpochSecond();
+                Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();
+                while (it.hasNext()) {
+                    Entry cacheEntry = it.next().getValue();
+                    boolean hasExpired = cacheEntry.timestamp - currTimestamp > 0;
+                    if (hasExpired) it.remove();
+                    removeEntry(cacheEntry);
+                }
+            }
+        }, MAX_AGE);
+    }
+
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
@@ -98,7 +117,7 @@ public class LRUCache {
     }
 
     public static void main(String[] args) {
-        LRUCache cache = new LRUCache(3);
+        LRUCache cache = new LRUCache(3, 2);
 
         cache.putEntry("a", "A");
         log(cache.toString());   // expects A
@@ -120,5 +139,9 @@ public class LRUCache {
 
         cache.putEntry("e", "E");
         log(cache.toString());   // expects E <-> C <-> D ("A" got evicted)
+
+        try { Thread.sleep(3000); }
+        catch (InterruptedException e) { System.out.println(e); }
+        log(cache.toString());   // expects E <-> D ("C" got evicted)
     }
 }
