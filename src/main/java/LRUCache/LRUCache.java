@@ -12,12 +12,17 @@ import static main.java.Utils.Helpers.log;
 *   1. Fixed Size: Cache needs to have bounds to limit memory usages.
 *   2. Fast Access: The insert and lookup operations should be fast, preferably O(1) time.
 *   3. Replacement of Entry: Cache evicts the least recently used entry when the specified memory is full.
+*   4. Automatic time-out mechanism: No query, regardless of how popular it is, can sit in the cache forever.
+*      All cache entries should have a max-age so that overage entries should be cleared. This ensures that
+*      the cached contents can be refreshed periodically.
 *
 * - Implementation:
-*   - When thinking about O(1) lookup/access, HashMap is an obvious answer, but it doesn't has mechanism of
-*      tracking which entry has been queried recently and which not.
+*   - To get O(1) lookup/access, HashMap is an obvious answer, but it doesn't has mechanism of tracking which
+*     entry has been queried recently and which not.
 *   - To track recent access, we require another data structure -- Doubly linked list. Reason for that is it
-*      provides O(1) insertion, deletion and update on both ends.
+*     provides O(1) insertion, deletion and update on both ends.
+*   - To periodically clear the cache, we need a timer running on a different thread to check the cache every
+*     xxx minutes and remove it if it's overage.
 *   - So our implementation will be a HashMap holding the keys and address of the nodes of a doubly linked list,
 *     and the doubly linked list holds the values to the keys (SEE _illustration.png).
 * */
@@ -86,7 +91,7 @@ public class LRUCache {
             tail = prevEntry;  // same here
     }
 
-    private void periodicallyClearCache() {
+    private void periodicallyClearCache() {  // schedule a timer to periodically clear expired cache entries
         timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
@@ -95,10 +100,9 @@ public class LRUCache {
                 Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();
                 while (it.hasNext()) {
                     Entry cacheEntry = it.next().getValue();
-                    boolean hasExpired = currTimestamp - cacheEntry.timestamp >= MAX_AGE;
-                    if (hasExpired) {
+                    if (currTimestamp - cacheEntry.timestamp >= MAX_AGE) {  // check if the cache entry has expired
                         removeEntryFromList(cacheEntry);
-                        it.remove();
+                        it.remove();  // Node: we cannot remove entries while looping over it using "for" or "forEach", iterator is the only possible way to do it
                     }
                 }
             }
