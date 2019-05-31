@@ -12,14 +12,23 @@ import static main.java.Utils.Helpers.log;
 *   1. Fixed Size: Cache needs to have bounds to limit memory usages.
 *   2. Fast Access: The insert and lookup operations should be fast, preferably O(1) time.
 *   3. Replacement of Entry: Cache evicts the least recently used entry when the specified memory is full.
+*
+* - Implementation:
+*   - When thinking about O(1) lookup/access, HashMap is an obvious answer, but it doesn't has mechanism of
+*      tracking which entry has been queried recently and which not.
+*   - To track recent access, we require another data structure -- Doubly linked list. Reason for that is it
+*      provides O(1) insertion, deletion and update on both ends.
+*   - So our implementation will be a HashMap holding the keys and address of the nodes of a doubly linked list,
+*     and the doubly linked list holds the values to the keys (SEE illustration.png).
 * */
 
 public class LRUCache {
-    private static final int MAX_CACHE_SIZE = 3;
+    private static int MAX_CACHE_SIZE;
     private Map<String, Entry> map;
     private Entry head, tail;
 
-    public LRUCache() {
+    public LRUCache(int size) {
+        MAX_CACHE_SIZE = size;
         map = new HashMap<>();
     }
 
@@ -89,7 +98,7 @@ public class LRUCache {
     }
 
     public static void main(String[] args) {
-        LRUCache cache = new LRUCache();
+        LRUCache cache = new LRUCache(3);
 
         cache.putEntry("a", "A");
         log(cache.toString());   // expects A
