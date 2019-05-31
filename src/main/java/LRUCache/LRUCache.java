@@ -19,7 +19,7 @@ import static main.java.Utils.Helpers.log;
 *   - To track recent access, we require another data structure -- Doubly linked list. Reason for that is it
 *      provides O(1) insertion, deletion and update on both ends.
 *   - So our implementation will be a HashMap holding the keys and address of the nodes of a doubly linked list,
-*     and the doubly linked list holds the values to the keys (SEE illustration.png).
+*     and the doubly linked list holds the values to the keys (SEE _illustration.png).
 * */
 
 public class LRUCache {
@@ -62,9 +62,9 @@ public class LRUCache {
     private void addToTop(Entry entry) {
         entry.prev = null;
         entry.next = head;
-        if (head != null) head.prev = entry;
+        if (head != null) head.prev = entry;  // remember to maintain the head, tail pointers
         head = entry;
-        if (tail == null) tail = head;
+        if (tail == null) tail = head;        // same here
     }
 
     private void removeEntry(Entry entry) {
@@ -73,12 +73,12 @@ public class LRUCache {
         if (prevEntry != null)
             prevEntry.next = nextEntry;
         else
-            head = nextEntry;  // Remember to maintain the head, tail pointers
+            head = nextEntry;  // remember to maintain the head, tail pointers
 
         if (nextEntry != null)
             nextEntry.prev = prevEntry;
         else
-            tail = prevEntry;
+            tail = prevEntry;  // same here
     }
 
     @Override
