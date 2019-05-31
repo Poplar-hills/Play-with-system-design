@@ -167,6 +167,6 @@ public class LRUCache {
 
         log(cache.toString());   // expects E ("C", "D" got evicted)
 
-        cache.destroy();
+        cache.destroy();  // don't forget to cancel the timer so that the release can finish
     }
 }
