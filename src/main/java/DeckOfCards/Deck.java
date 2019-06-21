@@ -2,6 +2,13 @@ package main.java.DeckOfCards;
 
 import java.util.List;
 
+/*
+* Deck (一副牌)
+* - 对于一副牌来说，玩家可以：
+*   1. 洗牌
+*   2. 发牌（发一张牌、发一手牌）
+* */
+
 public class Deck <T extends Card> {
     private List<T> cards;       // all cards, dealt or not
     private int dealtIndex = 0;  // first undealt card
