@@ -2,3 +2,8 @@
 target/
 .DS_Store
 classes/
+.classpath
+.gradle/
+.project
+.settings/
+bin/

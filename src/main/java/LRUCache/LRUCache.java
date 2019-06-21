@@ -13,7 +13,7 @@ import static main.java.Utils.Helpers.log;
 *   2. Fast Access: The insert and lookup operations should be fast, preferably O(1) time.
 *   3. Replacement of Entry: Cache evicts the least recently used entry when the specified memory is full.
 *   4. Automatic time-out mechanism: No query, regardless of how popular it is, can sit in the cache forever.
-*      All cache entries should have a max-age so that overage entries should be cleared. This ensures that
+*      All cache entries should have a max-age so that overage entries could be cleared. This ensures that
 *      the cached contents can be refreshed periodically.
 *
 * - Implementation:
@@ -45,19 +45,19 @@ public class LRUCache {
         thread.start();
     }
 
-    public String getEntry(String query) {
+    public String get(String query) {
         if (!map.containsKey(query)) return null;
         Entry entry = map.get(query);
-        entry.timestamp = Instant.now().getEpochSecond();  // update its freshness
-        removeEntryFromList(entry);
+        entry.createdAt = Instant.now().getEpochSecond();  // update its freshness
+        removeEntryFromList(entry);  // place the entry at top of the list after visiting it
         addToTopOfList(entry);
-        return entry.result;
+        return entry.value;
     }
 
-    public void putEntry(String query, String result) {
-        if (map.containsKey(query)) {            // update existing entry
+    public void put(String query, String result) {
+        if (map.containsKey(query)) {  // update existing entry
             Entry entry = map.get(query);
-            entry.result = result;
+            entry.value = result;
             removeEntryFromList(entry);
             addToTopOfList(entry);
             return;
@@ -67,7 +67,7 @@ public class LRUCache {
         map.put(query, entry);
         addToTopOfList(entry);
 
-        if (map.size() > MAX_CACHE_SIZE) {       // remove the least recently used entry
+        if (map.size() > MAX_CACHE_SIZE) {  // remove the least recently used entry
             map.remove(tail.query);
             removeEntryFromList(tail);
         }
@@ -76,23 +76,19 @@ public class LRUCache {
     private void addToTopOfList(Entry entry) {
         entry.prev = null;
         entry.next = head;
-        if (head != null) head.prev = entry;  // remember to maintain the head, tail pointers
+        if (head != null) head.prev = entry;  // don't forget to maintain the head, tail pointers
         head = entry;
-        if (tail == null) tail = head;        // same here
+        if (tail == null) tail = head;  // same here
     }
 
-    private void removeEntryFromList(Entry entry) {
+    private void removeEntryFromList(Entry entry) {  // namely removing a node from the linked list
         Entry prevEntry = entry.prev, nextEntry = entry.next;
 
-        if (prevEntry != null)
-            prevEntry.next = nextEntry;
-        else
-            head = nextEntry;  // remember to maintain the head, tail pointers
+        if (prevEntry != null) prevEntry.next = nextEntry;
+        else head = nextEntry;  // corner case: removing the first node - need to maintain the head pointer
 
-        if (nextEntry != null)
-            nextEntry.prev = prevEntry;
-        else
-            tail = prevEntry;  // same here
+        if (nextEntry != null) nextEntry.prev = prevEntry;
+        else tail = prevEntry;  // corner case: removing the last node - need to maintain the tail pointer
     }
 
     private void periodicallyClearCache() {  // schedule a timer to periodically clear expired cache entries
@@ -100,15 +96,15 @@ public class LRUCache {
         timer.schedule(new TimerTask() {  // TimerTask is not a SAM (single abstract method) type, meaning we cannot pass a lambda here
             @Override
             public void run() {
-                long currTimestamp = Instant.now().getEpochSecond();
-                Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();
-                while (it.hasNext()) {
-                    Entry cacheEntry = it.next().getValue();
-                    if (currTimestamp - cacheEntry.timestamp >= MAX_AGE) {  // check if the cache entry has expired
-                        removeEntryFromList(cacheEntry);
-                        it.remove();  // Node: it's impossible to remove entries while looping over the map using "for" or "forEach",
-                    }                 // iterator is the only way to do it.
-                }
+            long currTimestamp = Instant.now().getEpochSecond();
+            Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();  // iterate all the entries of the map
+            while (it.hasNext()) {
+                Entry cacheEntry = it.next().getValue();
+                if (currTimestamp - cacheEntry.createdAt >= MAX_AGE) {  // check if the cache entry has expired
+                    removeEntryFromList(cacheEntry);
+                    it.remove();  // Node: it's impossible to remove entries while looping over the map using "for" or "forEach",
+                }                 // iterator is the only way to do it.
+            }
             }
         }, MAX_AGE * 1000);
     }
@@ -125,7 +121,6 @@ public class LRUCache {
             s.append(curr.toString());
             if (curr != tail) s.append(" <-> ");
         }
-
         return s.toString();
     }
 
@@ -136,22 +131,22 @@ public class LRUCache {
     public static void main(String[] args) {
         LRUCache cache = new LRUCache(3, 2);
 
-        cache.putEntry("a", "A");
+        cache.put("a", "A");
         log(cache.toString());   // expects A
 
-        cache.putEntry("b", "B");
+        cache.put("b", "B");
         log(cache.toString());   // expects B <-> A
 
-        cache.getEntry("a");
+        String valueA = cache.get("a");
         log(cache.toString());   // expects A <-> B
 
-        cache.putEntry("c", "C");
+        cache.put("c", "C");
         log(cache.toString());   // expects C <-> A <-> B
 
-        cache.putEntry("d", "D");
+        cache.put("d", "D");
         log(cache.toString());   // expects D <-> C <-> A ("B" got evicted)
 
-        cache.getEntry("c");
+        String valueC = cache.get("c");
         log(cache.toString());   // expects C <-> D <-> A
 
         try {
@@ -160,7 +155,7 @@ public class LRUCache {
         }
         catch (InterruptedException e) { log(e); }
 
-        cache.putEntry("e", "E");
+        cache.put("e", "E");
         log(cache.toString());   // expects E <-> C <-> D ("A" got evicted)
 
         try {
