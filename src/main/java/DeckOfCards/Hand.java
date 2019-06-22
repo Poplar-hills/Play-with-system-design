@@ -11,10 +11,12 @@ import java.util.List;
 * */
 
 public class Hand <T extends Card> {
-    private List<T> cards = new ArrayList<>();
+    protected List<T> cards = new ArrayList<>();  // 因为 Hand 的子类 BlackJackHand 需要访问 cards 所有声明为 protected
 
     public int score() {
-        return cards.stream().map(Card::value).reduce(0, Integer::sum);
+        return cards.stream()
+                .map(Card::value)
+                .reduce(0, Integer::sum);
     }
 
     public void addCard(T card) {
