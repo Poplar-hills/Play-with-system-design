@@ -9,9 +9,9 @@ import java.util.List;
 *   2. 发牌（发一张牌、发一手牌）
 * */
 
-public class Deck <T extends Card> {
-    private List<T> cards;       // all cards, dealt or not
-    private int dealtIndex = 0;  // first undealt card
+public class Deck <T extends Card> {  // Deck 中的 cards 的类型必须继承 Card
+    private List<T> cards;            // all cards, dealt or not
+    private int dealtIndex = 0;       // the first undealt card in the remaining cards
 
     public Deck() { }
 
@@ -21,16 +21,12 @@ public class Deck <T extends Card> {
 
     public void shuffle() {
         for (int i = 0; i < cards.size(); i++) {
-            int randomIndex = (int) Math.random() * (cards.size() - i + 1) + i;
+            int randomIndex = (int) Math.random() * (cards.size() - i) + i;  // 每次从 [i, size-1] 区间中选一个
             T card1 = cards.get(i);
             T card2 = cards.get(randomIndex);
             cards.set(i, card2);
             cards.set(randomIndex, card1);
         }
-    }
-
-    public int remainingCards() {
-        return cards.size() - dealtIndex;
     }
 
     public T[] dealHand(int number) {
@@ -50,5 +46,9 @@ public class Deck <T extends Card> {
         T card = cards.get(dealtIndex++);
         card.markUnavailable();
         return card;
+    }
+
+    private int remainingCards() {
+        return cards.size() - dealtIndex;
     }
 }
