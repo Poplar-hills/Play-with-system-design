@@ -29,6 +29,11 @@ import static main.java.Utils.Helpers.log;
 * - Enhancement (SEE: p394 of Cracking the Coding Interview 6th Edition):
 *   1. Expand to many machines
 *   2. Clear the cache based on the topic or the URLs.
+*
+* - Java 中其实已有现成的实现 - LinkedHashMap。
+*   问：Java 中 LinkedHashMap 和 PriorityQueue 的区别是什么？ 
+*   答：PriorityQueue 保证最高或者最低优先级的的元素总是在队列头部，但是 LinkedHashMap 维持的顺序是元素插入的顺序。
+*      当遍历一个 PriorityQueue 时，没有任何顺序保证，但是 LinkedHashMap 可保证遍历顺序是元素插入的顺序。 
 * */
 
 public class LRUCache {

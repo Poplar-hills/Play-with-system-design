@@ -5,5 +5,5 @@
   - 每位玩家的目的是要取得最接近21点数的牌来击败庄家，但同时要避免爆牌。
 
 - 实现：
-  - Deck, Hand, Card, Suit 这四者实现了 generic 的扑克牌；
-  -
+  - Deck, Hand, Card, Suit 实现了 generic 的扑克牌；
+  - BlackJackHand, BlackJackCard 实现了21点；
