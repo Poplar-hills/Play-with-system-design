@@ -7,7 +7,7 @@ public class Call {
     private int number;
     private long startTime;
     private long endTime;
-    private CallToughness toughness;
+    private Rank rank;
 
     public Call(String id, int number) {
         this.id = id;
@@ -17,11 +17,11 @@ public class Call {
 
     public void setEndTime(long endTime) { this.endTime = endTime; }
 
-    public void incrementToughness() {
-        CallToughness newUrgency = CallToughness.getToughnessFromValue(toughness.getValue() + 1);
-        if (newUrgency != null)
-            toughness = newUrgency;
+    public void incrementRank() {
+        Rank newRank = Rank.getRankFromValue(rank.getValue() + 1);
+        if (newRank != null)
+            rank = newRank;
     }
 
-    public CallToughness getToughness() { return toughness; }
+    public Rank getRank() { return rank; }
 }
