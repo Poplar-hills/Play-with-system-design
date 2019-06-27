@@ -7,7 +7,8 @@ public class Respondent extends Employee {
     }
 
     @Override
-    public void answerCall(Call call) {
+    public void processCall(Call call) {
+        System.out.println("Respondent " + id + " is processing the call " + call.getId());
 
     }
 }

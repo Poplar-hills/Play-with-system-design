@@ -15,6 +15,10 @@ public class Call {
         startTime = Instant.now().getEpochSecond();
     }
 
+    public String getId() { return id; }
+
+    public void setStartTime(long startTime) { this.startTime = startTime; }
+
     public void setEndTime(long endTime) { this.endTime = endTime; }
 
     public void incrementRank() {

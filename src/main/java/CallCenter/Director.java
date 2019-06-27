@@ -7,7 +7,8 @@ public class Director extends Employee {
     }
 
     @Override
-    public void answerCall(Call call) {
+    public void processCall(Call call) {
+        System.out.println("Director " + id + " is processing the call " + call.getId());
         completeCall(call);  // Assume a director can always solve the problem, no need to escalate further
     }
 }
