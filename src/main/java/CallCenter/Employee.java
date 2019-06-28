@@ -14,7 +14,6 @@ public abstract class Employee {
         callMediator = handler;
     }
 
-
     public Rank getRank() { return rank; }
 
     public void answerCall(Call call) {
@@ -37,6 +36,6 @@ public abstract class Employee {
     }
 
     private void goIdling() {
-        callMediator.putBackToHandlerPool(this);
+        callMediator.putBackToHandlerQueue(this);
     }
 }

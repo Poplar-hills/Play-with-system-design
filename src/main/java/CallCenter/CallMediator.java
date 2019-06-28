@@ -5,19 +5,23 @@ import java.util.*;
 public class CallMediator {
 
     private static final int LEVELS = 3;
-    private Queue<Call> callQueue;
-    private Queue[] handlerPool;
+    private List<Queue<Call>> callQueues;
+    private List<Queue<Employee>> handlerQueues;
 
     public CallMediator() {
-        callQueue = new LinkedList<>();
-        handlerPool = new Queue[LEVELS];
-        for (int i = 0; i < handlerPool.length; i++)
-            handlerPool[i] = new LinkedList<>();
+        callQueues = new ArrayList<>(LEVELS);
+        handlerQueues = new ArrayList<>(LEVELS);
+
+        for (int i = 0; i < LEVELS; i++) {
+            callQueues.add(new LinkedList<>());
+            handlerQueues.add(new LinkedList<>());
+        }
     }
 
-    public void receiveCall(int callNumber) {
+    public void receiveCall(int callNumber) {  // 电话进入 Call Center 时调用的方法
         String id = UUID.randomUUID().toString();
-        callQueue.offer(new Call(id, callNumber));
+        Queue<Call> respondentCallQueue = callQueues.get(Rank.Respondent.getValue());
+        respondentCallQueue.offer(new Call(id, callNumber));  // 进入 rank 为 Respondent 的队列中等待被 respondent 消费
     }
 
     public void dispatchCall() {  // todo: 新启一个消费者线程来 dispatch call，使用 BlockingQueue
@@ -30,17 +34,17 @@ public class CallMediator {
     }
 
     public void escalate(Call call, Employee employee) {
-        call.incrementRank();
+        call.incrementRank();   // 将该 call 所需的 handler rank 升一级
         reassignHandler(call);
     }
 
-    private void reassignHandler(Call call) {
-        int rankValNeeded = call.getRank().getValue();
-        handlerPool[rankValNeeded].offer(call);
+    private void reassignHandler(Call call) {  // 将该 call 放入相应的队列中等待消费（当有符合其所需 rank 的 employee 进入 handlerQueues 的相应队列中时）
+        Rank rankNeeded = call.getRank();
+        callQueues.get(rankNeeded.getValue()).offer(call);
     }
 
-    public void putBackToHandlerPool(Employee employee) {
-        int employeeRankVal = employee.getRank().getValue();
-        handlerPool[employeeRankVal].offer(employee);
+    public void putBackToHandlerQueue(Employee employee) {  // 将该 employee 放入对应的队列中等待消费（当有符合其 rank 的 call 进入 callQueues 相应队列时）
+        Rank employeeRank = employee.getRank();
+        handlerQueues.get(employeeRank.getValue()).offer(employee);
     }
 }

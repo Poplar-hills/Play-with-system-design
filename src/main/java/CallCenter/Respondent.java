@@ -11,7 +11,7 @@ public class Respondent extends Employee {
         System.out.println("Respondent " + name + " is processing the call " + call.getId());
 
         try {
-            Thread.sleep(3000);  // simulate the processing
+            Thread.sleep(3000);  // simulate the processing time
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

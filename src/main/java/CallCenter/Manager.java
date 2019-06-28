@@ -11,7 +11,7 @@ public class Manager extends Employee {
         System.out.println("Manager " + name + " is processing the call " + call.getId());
 
         try {
-            Thread.sleep(2000);  // simulate the processing
+            Thread.sleep(2000);  // simulate the processing time
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
