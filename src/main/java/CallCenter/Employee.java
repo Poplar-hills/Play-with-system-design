@@ -6,7 +6,7 @@ public abstract class Employee {
     protected int id;
     protected String name;
     protected Rank rank;
-    private CallMediator callMediator;       // Employee 中保持一个 CallMediator 的引用 todo: 组合？？聚合？？
+    private CallMediator callMediator;  // Employee 中保持一个 CallMediator 的引用 todo: 这属于组合？？聚合？？
 
     public Employee(int id, String name, CallMediator handler) {
         this.id = id;

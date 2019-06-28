@@ -46,8 +46,7 @@ public class LRUCache {
         MAX_CACHE_SIZE = size;
         MAX_AGE = maxAge;
         map = new HashMap<>();
-        Thread thread = new Thread(this::periodicallyClearCache);  // spawn a new thread to periodically clear overage cache
-        thread.start();
+        new Thread(this::periodicallyClearCache).start();  // spawn a new thread to periodically clear overage cache
     }
 
     public String get(String query) {
