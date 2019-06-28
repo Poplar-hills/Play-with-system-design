@@ -15,6 +15,11 @@ public class Call {
         startTime = Instant.now().getEpochSecond();
     }
 
+    public Call(String id, int number, Rank rank) {  // Call can be instantiated with a rank
+        this(id, number);
+        this.rank = rank;
+    }
+
     public String getId() { return id; }
 
     public void setStartTime(long startTime) { this.startTime = startTime; }

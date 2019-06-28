@@ -19,7 +19,7 @@ public abstract class Employee {
 
     public void answerCall(Call call) {
         call.setStartTime(Instant.now().getEpochSecond());  // start processing the call
-        processCall(call);
+        new Thread(() -> processCall(call)).start();        // spawn a new thread to process the call
     }
 
     public abstract void processCall(Call call);
