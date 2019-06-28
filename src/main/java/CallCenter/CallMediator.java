@@ -55,21 +55,17 @@ public class CallMediator {
         }
     }
 
-    public void escalate(Call call, Employee employee) {
-        call.incrementRank();   // 将该 call 所需的 handler rank 升一级
-        reassignHandler(call);
-    }
-
-    private void reassignHandler(Call call) {  // 将该 call 放入相应的队列中等待消费（当有符合其所需 rank 的 employee 进入 handlerQueues 的相应队列中时）
+    public void escalate(Call call) {
+        call.incrementRank();   // 先将该 call 所需的 handler rank 升一级
         Rank rankNeeded = call.getRank();
         try {
-            callQueues.get(rankNeeded.getValue()).put(call);
+            callQueues.get(rankNeeded.getValue()).put(call);  // 将该 call 放入相应的队列中等待消费（当够级别的 handler 出现闲置时即被处理）
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    public void putBackToHandlerQueue(Employee employee) {  // 将该 employee 放入对应的队列中等待消费（当有符合其 rank 的 call 进入 callQueues 相应队列时）
+    public void putBackToHandlerQueue(Employee employee) {  // 将该 employee 放入相应的队列中等待消费（当够级别的 call 出现时即开始处理）
         Rank employeeRank = employee.getRank();
         try {
             handlerQueues.get(employeeRank.getValue()).put(employee);

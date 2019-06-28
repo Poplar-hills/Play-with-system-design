@@ -30,7 +30,7 @@ public abstract class Employee {
     }
 
     public void escalateCall(Call call) {
-        callMediator.escalate(call, this);
+        callMediator.escalate(call);
         System.out.println("Escalating the call " + call.getId());
         goIdling();
     }
