@@ -43,7 +43,7 @@ public class CallMediator {
         Call call = null;
         Employee handler = null;
 
-        while (true) {
+        while (true) {  // 该线程不断轮询 callQueue 和 handlerQueue 尝试取出元素
             try {
                 call = callQueue.take();
                 handler = handlerQueue.take();
