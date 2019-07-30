@@ -30,10 +30,19 @@ import static main.java.Utils.Helpers.log;
 *   1. Expand to many machines
 *   2. Clear the cache based on the topic or the URLs.
 *
-* - Java 中其实已有现成的实现 - LinkedHashMap。
-*   问：Java 中 LinkedHashMap 和 PriorityQueue 的区别是什么？ 
-*   答：PriorityQueue 保证最高或者最低优先级的的元素总是在队列头部，但是 LinkedHashMap 维持的顺序是元素插入的顺序。
-*      当遍历一个 PriorityQueue 时，没有任何顺序保证，但是 LinkedHashMap 可保证遍历顺序是元素插入的顺序。 
+* - Java 中其实已有现成的实现 - LinkedHashMap，简介 SEE：https://www.jianshu.com/p/cb3573eb1890。
+*   - HashMap vs. LinkedHashMap vs. TreeMap?
+*     ╔══════════════════╦═════════════════════╦═══════════════════╦═════════════════════╗
+*     ║    Property      ║       HashMap       ║      TreeMap      ║    LinkedHashMap    ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
+*     ║ Iteration Order  ║  no guarantee order ║   sorted order    ║   insertion order   ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
+*     ║  Get/put/remove  ║        O(1)         ║     O(log(n))     ║         O(1)        ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
+*     ║ Null values/keys ║       allowed       ║    only values    ║       allowed       ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
+*     ║  Implementation  ║       buckets       ║  Red-Black Tree   ║double-linked buckets║
+*     ╚══════════════════╩═════════════════════╩═══════════════════╩═════════════════════╝
 * */
 
 public class LRUCache {
