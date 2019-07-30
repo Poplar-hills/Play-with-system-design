@@ -32,45 +32,46 @@ import static main.java.Utils.Helpers.log;
 *
 * - Java 中其实已有现成的实现 - LinkedHashMap，简介 SEE：https://www.jianshu.com/p/cb3573eb1890。
 *   - HashMap vs. LinkedHashMap vs. TreeMap?
-*     ╔══════════════════╦═════════════════════╦═══════════════════╦═════════════════════╗
-*     ║    Property      ║       HashMap       ║      TreeMap      ║    LinkedHashMap    ║
-*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
-*     ║ Iteration Order  ║  no guarantee order ║   sorted order    ║   insertion order   ║
-*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
-*     ║  Get/put/remove  ║        O(1)         ║     O(log(n))     ║         O(1)        ║
-*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
-*     ║ Null values/keys ║       allowed       ║    only values    ║       allowed       ║
-*     ╠══════════════════╬═════════════════════╬═══════════════════╬═════════════════════╣
-*     ║  Implementation  ║       buckets       ║  Red-Black Tree   ║double-linked buckets║
-*     ╚══════════════════╩═════════════════════╩═══════════════════╩═════════════════════╝
+*     ╔══════════════════╦═════════════════════╦═══════════════════╦═══════════════════════╗
+*     ║    Property      ║       HashMap       ║      TreeMap      ║     LinkedHashMap     ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═══════════════════════╣
+*     ║ Iteration Order  ║  no guarantee order ║   sorted order    ║    insertion order    ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═══════════════════════╣
+*     ║  Get/put/remove  ║        O(1)         ║      O(logn)      ║          O(1)         ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═══════════════════════╣
+*     ║ Null values/keys ║       allowed       ║    only values    ║        allowed        ║
+*     ╠══════════════════╬═════════════════════╬═══════════════════╬═══════════════════════╣
+*     ║  Implementation  ║       buckets       ║  Red-Black Tree   ║ double-linked buckets ║
+*     ╚══════════════════╩═════════════════════╩═══════════════════╩═══════════════════════╝
 * */
 
 public class LRUCache {
-    private static int MAX_CACHE_SIZE, MAX_AGE;
+    private static int MAX_CACHE_SIZE, MAX_AGE, CLEAR_INTERVAL;
     private Map<String, Entry> map;
     private Entry head, tail;
     private Timer timer;
 
-    public LRUCache(int size, int maxAge) {
+    public LRUCache(int size, int maxAge, int clearInterval) {
         MAX_CACHE_SIZE = size;
         MAX_AGE = maxAge;
+        CLEAR_INTERVAL = clearInterval;
         map = new HashMap<>();
-        new Thread(this::periodicallyClearCache).start();  // spawn a new thread to periodically clear overage cache
+        new Thread(this::periodicallyClearCache).start();  // spawn a new thread to periodically clear expired cache entries
     }
 
     public String get(String query) {
-        if (!map.containsKey(query)) return null;
-        Entry entry = map.get(query);
+        if (!map.containsKey(query)) return null;          // cache miss
+        Entry entry = map.get(query);                      // cache hit
         entry.createdAt = Instant.now().getEpochSecond();  // update its freshness
-        removeEntryFromList(entry);  // place the entry at top of the list after visiting it
+        removeEntryFromList(entry);  // relocate the entry to the top of the list after visiting it
         addToTopOfList(entry);
-        return entry.value;
+        return entry.result;
     }
 
     public void put(String query, String result) {
         if (map.containsKey(query)) {  // update existing entry
             Entry entry = map.get(query);
-            entry.value = result;
+            entry.result = result;
             removeEntryFromList(entry);
             addToTopOfList(entry);
             return;
@@ -89,13 +90,14 @@ public class LRUCache {
     private void addToTopOfList(Entry entry) {
         entry.prev = null;
         entry.next = head;
-        if (head != null) head.prev = entry;  // don't forget to maintain the head, tail pointers
+        if (head != null) head.prev = entry;  // don't forget to maintain the head and tail pointers
         head = entry;
         if (tail == null) tail = head;  // same here
     }
 
     private void removeEntryFromList(Entry entry) {  // namely removing a node from the linked list
-        Entry prevEntry = entry.prev, nextEntry = entry.next;
+        Entry prevEntry = entry.prev;
+        Entry nextEntry = entry.next;
 
         if (prevEntry != null) prevEntry.next = nextEntry;
         else head = nextEntry;  // corner case: removing the first node - need to maintain the head pointer
@@ -108,9 +110,9 @@ public class LRUCache {
         timer = new Timer();
         timer.schedule(new TimerTask() {  // TimerTask is not a SAM (single abstract method) type, meaning we cannot pass a lambda here
             @Override
-            public void run() {
+            public void run() {                // just like the timeout function in JS
             long currTimestamp = Instant.now().getEpochSecond();
-            Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();  // iterate all the entries of the map
+            Iterator<Map.Entry<String, Entry>> it = map.entrySet().iterator();  // iterate the map entries
             while (it.hasNext()) {
                 Entry cacheEntry = it.next().getValue();
                 if (currTimestamp - cacheEntry.createdAt >= MAX_AGE) {  // check if the cache entry has expired
@@ -119,7 +121,11 @@ public class LRUCache {
                 }                 // iterator is the only way to do it.
             }
             }
-        }, MAX_AGE * 1000);
+        }, CLEAR_INTERVAL);
+    }
+
+    public void destroy() {
+        timer.cancel();  // once the timer is cancelled, the thread will end
     }
 
     @Override
@@ -137,12 +143,8 @@ public class LRUCache {
         return s.toString();
     }
 
-    public void destroy() {
-        timer.cancel();  // once the timer is cancelled, the thread will finish
-    }
-
     public static void main(String[] args) {
-        LRUCache cache = new LRUCache(3, 2);
+        LRUCache cache = new LRUCache(3, 2, 2000);
 
         cache.put("a", "A");
         log(cache.toString());   // expects A
@@ -150,16 +152,16 @@ public class LRUCache {
         cache.put("b", "B");
         log(cache.toString());   // expects B <-> A
 
-        String valueA = cache.get("a");
+        cache.get("a");          // visit entry a
         log(cache.toString());   // expects A <-> B
 
         cache.put("c", "C");
         log(cache.toString());   // expects C <-> A <-> B
 
         cache.put("d", "D");
-        log(cache.toString());   // expects D <-> C <-> A ("B" got evicted)
+        log(cache.toString());   // expects D <-> C <-> A ("B" got evicted as the cache capacity is 3)
 
-        String valueC = cache.get("c");
+        cache.get("c");          // visit entry c
         log(cache.toString());   // expects C <-> D <-> A
 
         try {
@@ -177,8 +179,8 @@ public class LRUCache {
         }
         catch (InterruptedException e) { log(e); }
 
-        log(cache.toString());   // expects E ("C", "D" got evicted)
+        log(cache.toString());   // expects E ("C", "D" expired and got cleared)
 
-        cache.destroy();  // don't forget to cancel the timer so that the release can finish
+        cache.destroy();  // don't forget to stop the timer to destroy the timer thread
     }
 }
